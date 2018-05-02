@@ -88,7 +88,7 @@ spec:
 				Expect(err).To(BeNil())
 				serverSession.Wait(100 * time.Millisecond)
 				Expect(serverSession.ExitCode()).To(Equal(1))
-				Expect(serverSession.Buffer()).To(gbytes.Say("manifest not found"))
+				Expect(serverSession.Buffer()).To(gbytes.Say("manifest %s not found", manifestpath))
 			})
 		})
 	})
