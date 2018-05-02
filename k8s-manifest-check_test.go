@@ -9,6 +9,8 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"time"
 	"io/ioutil"
+	"os"
+	"path"
 )
 
 var pathToServerBinary string
@@ -43,10 +45,15 @@ var _ = Describe("Check", func() {
 		Expect(serverSession.Buffer()).To(gbytes.Say("missing arg"))
 		Expect(serverSession.ExitCode()).To(Equal(1))
 	})
-	Context("with valid manifests", func() {
+	Context("with manifests", func() {
 		var args []string
-		BeforeEach(func() {
-			content := `apiVersion: v1
+		var manifestpath string
+		AfterEach(func() {
+			os.Remove(manifestpath)
+		})
+		Context("valid", func() {
+			BeforeEach(func() {
+				content := `apiVersion: v1
 kind: Pod
 metadata:
   name: hello-world
@@ -55,20 +62,35 @@ spec:
   - name: hello
     image: "ubuntu:14.04"
 `
-			tmpfile, err := ioutil.TempFile("", "example")
-			if err != nil {
+				tmpfile, err := ioutil.TempFile("", "example")
+				if err != nil {
+					Expect(err).To(BeNil())
+				}
+				tmpfile.WriteString(content)
+				manifestpath = tmpfile.Name()
+				args = []string{
+					manifestpath,
+				}
+			})
+			It("print nothing", func() {
+				serverSession, err = gexec.Start(exec.Command(pathToServerBinary, args...), GinkgoWriter, GinkgoWriter)
 				Expect(err).To(BeNil())
-			}
-			tmpfile.WriteString(content)
-			args = []string{
-				tmpfile.Name(),
-			}
+				serverSession.Wait(100 * time.Millisecond)
+				Expect(serverSession.ExitCode()).To(Equal(0))
+			})
 		})
-		It("print nothing", func() {
-			serverSession, err = gexec.Start(exec.Command(pathToServerBinary, args...), GinkgoWriter, GinkgoWriter)
-			Expect(err).To(BeNil())
-			serverSession.Wait(100 * time.Millisecond)
-			Expect(serverSession.ExitCode()).To(Equal(0))
+		Context("invalid manifestpath", func() {
+			BeforeEach(func() {
+				manifestpath = path.Join(os.TempDir(), "not-existing-file")
+			})
+			It("print error", func() {
+				serverSession, err = gexec.Start(exec.Command(pathToServerBinary, args...), GinkgoWriter, GinkgoWriter)
+				Expect(err).To(BeNil())
+				serverSession.Wait(100 * time.Millisecond)
+				Expect(serverSession.ExitCode()).To(Equal(1))
+				Expect(serverSession.Buffer()).To(gbytes.Say("manifest not found"))
+			})
 		})
 	})
+
 })
