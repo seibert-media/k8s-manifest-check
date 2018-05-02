@@ -24,7 +24,7 @@ func main() {
 	}
 	for _, arg := range args {
 		glog.V(4).Infof("handle manifest %s", arg)
-		if err := check.Check(arg); err != nil {
+		if err := check.Path(arg); err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
