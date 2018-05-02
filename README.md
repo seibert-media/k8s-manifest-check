@@ -1,3 +1,3 @@
 # Kubernetes Manifest Check
 
-Tools for formatting Kubernetes YAML files.
+Tools for checking Kubernetes YAML files.
