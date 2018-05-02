@@ -14,7 +14,7 @@ func main() {
 	}
 	for _, arg := range flag.Args() {
 		if _, err := os.Stat(arg); os.IsNotExist(err) {
-			fmt.Println("manifest not found")
+			fmt.Printf("manifest %s not found\n", arg)
 			os.Exit(1)
 		}
 	}

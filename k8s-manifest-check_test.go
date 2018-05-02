@@ -46,12 +46,12 @@ var _ = Describe("Check", func() {
 		Expect(serverSession.ExitCode()).To(Equal(1))
 	})
 	Context("with manifests", func() {
-		var args []string
 		var manifestpath string
 		AfterEach(func() {
 			os.Remove(manifestpath)
 		})
 		Context("valid", func() {
+			var args []string
 			BeforeEach(func() {
 				content := `apiVersion: v1
 kind: Pod
@@ -79,9 +79,13 @@ spec:
 				Expect(serverSession.ExitCode()).To(Equal(0))
 			})
 		})
-		Context("invalid manifestpath", func() {
+		Context("not existing manifest", func() {
+			var args []string
 			BeforeEach(func() {
 				manifestpath = path.Join(os.TempDir(), "not-existing-file")
+				args = []string{
+					manifestpath,
+				}
 			})
 			It("print error", func() {
 				serverSession, err = gexec.Start(exec.Command(pathToServerBinary, args...), GinkgoWriter, GinkgoWriter)
