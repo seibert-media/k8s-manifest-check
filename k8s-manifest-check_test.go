@@ -6,6 +6,9 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	"os/exec"
+	"github.com/onsi/gomega/gbytes"
+	"time"
+	"io/ioutil"
 )
 
 var pathToServerBinary string
@@ -33,8 +36,39 @@ func TestCheck(t *testing.T) {
 
 var _ = Describe("Check", func() {
 	var err error
-	It("return no error", func() {
+	It("print usage if no arg is given", func() {
 		serverSession, err = gexec.Start(exec.Command(pathToServerBinary), GinkgoWriter, GinkgoWriter)
 		Expect(err).To(BeNil())
+		serverSession.Wait(100 * time.Millisecond)
+		Expect(serverSession.Buffer()).To(gbytes.Say("missing arg"))
+		Expect(serverSession.ExitCode()).To(Equal(1))
+	})
+	Context("with valid manifests", func() {
+		var args []string
+		BeforeEach(func() {
+			content := `apiVersion: v1
+kind: Pod
+metadata:
+  name: hello-world
+spec:
+  containers:
+  - name: hello
+    image: "ubuntu:14.04"
+`
+			tmpfile, err := ioutil.TempFile("", "example")
+			if err != nil {
+				Expect(err).To(BeNil())
+			}
+			tmpfile.WriteString(content)
+			args = []string{
+				tmpfile.Name(),
+			}
+		})
+		It("print nothing", func() {
+			serverSession, err = gexec.Start(exec.Command(pathToServerBinary, args...), GinkgoWriter, GinkgoWriter)
+			Expect(err).To(BeNil())
+			serverSession.Wait(100 * time.Millisecond)
+			Expect(serverSession.ExitCode()).To(Equal(0))
+		})
 	})
 })
