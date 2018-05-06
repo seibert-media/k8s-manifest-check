@@ -91,25 +91,31 @@ func kind(content []byte) (k8s_runtime.Object, error) {
 
 func checkContainers(containers []corev1.Container) error {
 	for _, container := range containers {
-		if err := checkContainer(container); err != nil {
+		if err := Resources(container.Resources); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func checkContainer(container corev1.Container) error {
-	if container.Resources.Requests.Cpu().IsZero() {
-		return fmt.Errorf("cpu request is zero")
+func Resources(resourceRequirements corev1.ResourceRequirements) error {
+	if resourceRequirements.Requests.Cpu().IsZero() {
+		return errors.New("cpu request is zero")
 	}
-	if container.Resources.Requests.Memory().IsZero() {
-		return fmt.Errorf("memory request is zero")
+	if resourceRequirements.Requests.Memory().IsZero() {
+		return errors.New("memory request is zero")
 	}
-	if container.Resources.Limits.Memory().IsZero() {
-		return fmt.Errorf("memory limit is zero")
+	if resourceRequirements.Limits.Memory().IsZero() {
+		return errors.New("memory limit is zero")
 	}
-	if container.Resources.Limits.Cpu().IsZero() {
-		return fmt.Errorf("cpu limit is zero")
+	if resourceRequirements.Limits.Cpu().IsZero() {
+		return errors.New("cpu limit is zero")
+	}
+	if resourceRequirements.Requests.Cpu().Cmp(*resourceRequirements.Limits.Cpu()) > 0 {
+		return errors.New("cpu request must be less than or equal to cpu limit")
+	}
+	if resourceRequirements.Requests.Memory().Cmp(*resourceRequirements.Limits.Memory()) > 0 {
+		return errors.New("memory request must be less than or equal to memory limit")
 	}
 	return nil
 }

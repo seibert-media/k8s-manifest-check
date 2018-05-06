@@ -1,16 +1,17 @@
 package check_test
 
 import (
-	"testing"
-
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"testing"
 
 	"github.com/bborbe/k8s-manifest-check/check"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 func TestCheck(t *testing.T) {
@@ -19,7 +20,6 @@ func TestCheck(t *testing.T) {
 }
 
 var _ = Describe("Check", func() {
-
 	Context("not existing path", func() {
 		var manifestpath string
 		BeforeEach(func() {
@@ -99,6 +99,67 @@ spec:
 			err := check.Path(manifestpath)
 			Expect(err).To(BeNil())
 		})
+	})
+})
+
+var _ = Describe("Resources", func() {
+	var err error
+	var requirements corev1.ResourceRequirements
+	BeforeEach(func() {
+		requirements = corev1.ResourceRequirements{
+			Requests: corev1.ResourceList{
+				"cpu":    resource.MustParse("10m"),
+				"memory": resource.MustParse("10m"),
+			},
+			Limits: corev1.ResourceList{
+				"cpu":    resource.MustParse("10m"),
+				"memory": resource.MustParse("10m"),
+			},
+		}
+	})
+	It("return no error with valid resources", func() {
+		err = check.Resources(requirements)
+		Expect(err).To(BeNil())
+	})
+	It("return error if request cpu missing", func() {
+		delete(requirements.Requests, "cpu")
+		err = check.Resources(requirements)
+		Expect(err).NotTo(BeNil())
+	})
+	It("return error if request memory missing", func() {
+		delete(requirements.Requests, "memory")
+		err = check.Resources(requirements)
+		Expect(err).NotTo(BeNil())
+	})
+	It("return error if limit cpu missing", func() {
+		delete(requirements.Limits, "cpu")
+		err = check.Resources(requirements)
+		Expect(err).NotTo(BeNil())
+	})
+	It("return error if limit memory missing", func() {
+		delete(requirements.Limits, "memory")
+		err = check.Resources(requirements)
+		Expect(err).NotTo(BeNil())
+	})
+	It("return error if cpu limit is below cpu request", func() {
+		requirements.Requests["cpu"] = resource.MustParse("20m")
+		err = check.Resources(requirements)
+		Expect(err).NotTo(BeNil())
+	})
+	It("return error if memory limit is below memory request", func() {
+		requirements.Requests["memory"] = resource.MustParse("20m")
+		err = check.Resources(requirements)
+		Expect(err).NotTo(BeNil())
+	})
+	It("return no error if cpu limit is above cpu request", func() {
+		requirements.Limits["cpu"] = resource.MustParse("20m")
+		err = check.Resources(requirements)
+		Expect(err).To(BeNil())
+	})
+	It("return no error if memory limit is above memory request", func() {
+		requirements.Limits["memory"] = resource.MustParse("20m")
+		err = check.Resources(requirements)
+		Expect(err).To(BeNil())
 	})
 })
 
