@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/bborbe/k8s-manifest-check/check"
+	"github.com/seibert-media/k8s-manifest-check/check"
 	"github.com/golang/glog"
 )
 

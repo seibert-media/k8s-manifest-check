@@ -7,7 +7,7 @@ import (
 	"path"
 	"testing"
 
-	"github.com/bborbe/k8s-manifest-check/check"
+	"github.com/seibert-media/k8s-manifest-check/check"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"

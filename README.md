@@ -7,7 +7,7 @@ At the moment the tools check Syntax and Resources in all pods, rc and deploymen
 ## Install
 
 ```bash
-go get github.com/bborbe/k8s-manifest-check
+go get github.com/seibert-media/k8s-manifest-check
 ```
 
 ## Check all Kubernetes manifest files

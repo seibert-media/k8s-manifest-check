@@ -19,7 +19,7 @@ var serverSession *gexec.Session
 
 var _ = BeforeSuite(func() {
 	var err error
-	pathToServerBinary, err = gexec.Build("github.com/bborbe/k8s-manifest-check")
+	pathToServerBinary, err = gexec.Build("github.com/seibert-media/k8s-manifest-check")
 	Expect(err).NotTo(HaveOccurred())
 })
 
